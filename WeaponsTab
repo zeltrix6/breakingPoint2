@@ -1,0 +1,85 @@
+local WeaponsTab = {}
+
+function WeaponsTab:Create(playerGui)
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = playerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.3, 0, 0.6, 0)
+    frame.Position = UDim2.new(0.35, 0, 0.2, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    frame.Parent = screenGui
+
+    local function createSlider(title, posY, min, max, callback)
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1, -20, 0, 30)
+        label.Position = UDim2.new(0, 10, 0, posY)
+        label.Text = title
+        label.BackgroundTransparency = 1
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.Parent = frame
+
+        local slider = Instance.new("TextButton")
+        slider.Size = UDim2.new(1, -20, 0, 25)
+        slider.Position = UDim2.new(0, 10, 0, posY + 30)
+        slider.Text = tostring(min)
+        slider.BackgroundColor3 = Color3.fromRGB(60,60,60)
+        slider.TextColor3 = Color3.fromRGB(255,255,255)
+        slider.Parent = frame
+
+        slider.MouseButton1Down:Connect(function()
+            local uis = game:GetService("UserInputService")
+            local moving = true
+            local conn
+            conn = uis.InputChanged:Connect(function(input)
+                if moving and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local percent = math.clamp((input.Position.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+                    local value = math.floor(percent * max)
+                    slider.Text = tostring(value)
+                    callback(value)
+                end
+            end)
+            uis.InputEnded:Wait()
+            moving = false
+            conn:Disconnect()
+        end)
+    end
+
+    local knifeDamage = 0
+    createSlider("Knife Damage", 10, 0, 200, function(v)
+        knifeDamage = v
+    end)
+
+    local gunDamage = 0
+    createSlider("Gun Damage", 90, 0, 200, function(v)
+        gunDamage = v
+    end)
+
+    local throwSpeed = 0
+    createSlider("Throw Speed", 170, 0, 200, function(v)
+        throwSpeed = v
+    end)
+
+    local silentAimButton = Instance.new("TextButton")
+    silentAimButton.Size = UDim2.new(1, -20, 0, 40)
+    silentAimButton.Position = UDim2.new(0, 10, 0, 250)
+    silentAimButton.Text = "Silent Aim: OFF"
+    silentAimButton.BackgroundColor3 = Color3.fromRGB(80,80,80)
+    silentAimButton.TextColor3 = Color3.fromRGB(255,255,255)
+    silentAimButton.Parent = frame
+
+    local silentAimEnabled = false
+    silentAimButton.Activated:Connect(function()
+        silentAimEnabled = not silentAimEnabled
+        silentAimButton.Text = "Silent Aim: " .. (silentAimEnabled and "ON" or "OFF")
+    end)
+
+    return {
+        GetKnifeDamage = function() return knifeDamage end,
+        GetGunDamage = function() return gunDamage end,
+        GetThrowSpeed = function() return throwSpeed end,
+        SilentAim = function() return silentAimEnabled end
+    }
+end
+
+return WeaponsTab
